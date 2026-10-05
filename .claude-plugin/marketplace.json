@@ -1,0 +1,12 @@
+{
+  "name": "claude-clean-copy",
+  "description": "Clean text when copying from the Claude Code terminal",
+  "owner": { "name": "Brian Pravato" },
+  "plugins": [
+    {
+      "name": "clean-copy",
+      "description": "Copy on select without the gutter bar and without line breaks in the middle of sentences",
+      "source": "./plugins/clean-copy"
+    }
+  ]
+}
