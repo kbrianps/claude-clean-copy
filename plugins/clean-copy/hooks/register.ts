@@ -3,8 +3,9 @@ import type { EngineInterface, Register, Timer } from 'claude-code'
 import { clean } from './clean'
 
 const TICK_MS = 250
-// For how many ticks, once the selection stops changing, Claude Code's own copy is still awaited.
-const WAIT_TICKS = 40
+// For how many ticks, once the selection stops changing, Claude Code's own copy is still awaited:
+// two seconds, which is also the longest the clipboard is read after a selection.
+const WAIT_TICKS = 8
 // Clipboard readers, tried in order: Wayland, X11, macOS.
 const READERS = [
   ['wl-paste', '--no-newline'],
@@ -43,7 +44,7 @@ export const register: Register = on => {
         isDone = false
         return
       }
-      if (raw === undefined || isDone || ticks++ > WAIT_TICKS) return
+      if (raw === undefined || isDone || ticks++ >= WAIT_TICKS) return
       const text = clean(raw)
       if (text === raw) {
         isDone = true

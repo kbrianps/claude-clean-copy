@@ -23,10 +23,22 @@ Then start a new session, or run `/reload-plugins`.
 
 Claude Code's copy on select writes straight to the clipboard and does not raise the `ui.copy` plugin event, so a plugin cannot rewrite the text before it is copied ([anthropics/claude-code#99758](https://github.com/anthropics/claude-code/issues/99758)). The plugin works around that:
 
-1. every 250 ms it reads the current selection (`$.ui.selection()`);
-2. once the clipboard holds exactly that selection, it writes the cleaned text over it.
+1. every 250 ms it asks Claude Code for its own current selection (`$.ui.selection()`, an in-process call, not a clipboard read);
+2. after you select something that cleaning would change, it reads the clipboard until it holds exactly that selection, for at most 2 seconds;
+3. it writes the cleaned text over it and stops.
 
-It only touches the clipboard when it holds the text you just selected in Claude Code, so a copy made in another app is never overwritten.
+It only writes to the clipboard when it holds the text you just selected in Claude Code, so a copy made in another app is never overwritten.
+
+## Privacy
+
+The plugin does not read the clipboard continuously.
+
+- The clipboard is read only after a selection made inside Claude Code, and only when cleaning would change the selected text. With no selection, or with a selection that is already clean, it is never read.
+- Reads stop as soon as Claude Code's copy is seen, or after 2 seconds (8 reads at most per selection).
+- During those 2 seconds it reads whatever the clipboard holds, including text copied from another app. That content is compared in memory with the selection and dropped.
+- Nothing is stored, logged or sent anywhere. The plugin makes no network calls and writes no files.
+
+The whole watcher is [`plugins/clean-copy/hooks/register.ts`](plugins/clean-copy/hooks/register.ts), under 70 lines.
 
 ## Requirements and limits
 
@@ -34,6 +46,7 @@ It only touches the clipboard when it holds the text you just selected in Claude
 - A clipboard reader on the machine: `wl-paste` (Wayland), `xclip` (X11) or `pbpaste` (macOS).
 - Tested on Ubuntu with GNOME on Wayland and Ghostty. The X11 and macOS readers are untested. Windows is not supported.
 - Pasting less than about half a second after releasing the mouse may still get the raw text.
+- If you stop dragging and hold the mouse for more than 2 seconds before releasing, the copy is not cleaned. Select again.
 - A selection made by the terminal itself (shift + drag) never reaches Claude Code, so it is not cleaned.
 - Joining wrapped rows is a heuristic on the longest line of the selection. It can be wrong; please open an issue with the text as selected and as pasted.
 - The plugin API (function hooks) is early access and may change between Claude Code releases. Written against 2.1.289.
