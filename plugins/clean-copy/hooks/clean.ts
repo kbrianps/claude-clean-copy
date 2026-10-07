@@ -18,10 +18,16 @@ function indentOf(line: string): number {
   return line.length - line.trimStart().length
 }
 
-function dedent(lines: string[]): string[] {
-  const filled = lines.filter(line => line.trim() !== '')
-  if (filled.length === 0) return lines
-  const indent = Math.min(...filled.map(indentOf))
+function hasGutter(line: string): boolean {
+  return stripGutter(line) !== line
+}
+
+// A selection that starts in the middle of a row has no margin on its first line, and so says
+// nothing about the indentation of the others: it is measured on the lines that follow.
+function dedent(lines: string[], startsMidRow: boolean): string[] {
+  const measured = (startsMidRow ? lines.slice(1) : lines).filter(line => line.trim() !== '')
+  if (measured.length === 0) return lines
+  const indent = Math.min(...measured.map(indentOf))
   return lines.map(line => line.slice(Math.min(indent, indentOf(line))))
 }
 
@@ -34,7 +40,9 @@ function wrapsInto(line: string, next: string, width: number): boolean {
 }
 
 export function clean(text: string): string {
-  const lines = dedent(text.split(/\r?\n/).map(line => stripGutter(line).trimEnd()))
+  const rows = text.split(/\r?\n/)
+  const startsMidRow = rows.length > 1 && !hasGutter(rows[0] ?? '') && rows.slice(1).some(hasGutter)
+  const lines = dedent(rows.map(line => stripGutter(line).trimEnd()), startsMidRow)
   const width = Math.max(0, ...lines.map(line => line.length))
   // Joins only text that looks like screen rows: the longest line gives the wrap width.
   if (width < MIN_WRAP || width > MAX_WRAP) return lines.join('\n')

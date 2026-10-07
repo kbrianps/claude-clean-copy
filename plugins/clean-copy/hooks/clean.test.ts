@@ -37,3 +37,13 @@ test('strips a pane border and leaves a drawn table as it is', async () => {
   const table = '│ a │ b │\n│ 1 │ 2 │'
   expect(clean(table)).toBe(table)
 })
+
+test('a selection that starts mid-row leaves no indentation on the rows after it', async () => {
+  const screen = ['holidays = rest', '  ▎ rest == coding', '  ▎', '  ▎ Third row.'].join('\n')
+  expect(clean(screen)).toBe('holidays = rest\nrest == coding\n\nThird row.')
+})
+
+test('a first line with no margin keeps the indentation of plain text after it', async () => {
+  const text = 'Title\n  - item one\n  - item two'
+  expect(clean(text)).toBe(text)
+})

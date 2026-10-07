@@ -1,6 +1,6 @@
 {
   "name": "clean-copy",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Copy on select without the gutter bar and without line breaks in the middle of sentences",
   "author": { "name": "Brian Pravato", "url": "https://github.com/kbrianps" },
   "repository": "https://github.com/kbrianps/claude-clean-copy",
